@@ -93,6 +93,23 @@ if {[catch {package require Tcl 8.5-}]} {
 }
 
 # ----------------------------------------------------------------------
+# Support for Tcl 9.0, which is what MacOS is now shipping with newer MacOS
+# versions.  9.0 removes the expansion of ~ to mean a users home directory,
+# replacing it with [file home].  If we are running a Tcl before 9.0 then
+# add a shim [file home] to the file ensemble so the code still works with
+# pre 9.0
+
+if {[catch {file home}]} {
+  # no "file home" subcommand exists, so we are on pre 9.0
+  proc ::tcl::file::home {} {
+    file normalize ~
+  }
+  set nsmap [namespace ensemble configure file -map]
+  lappend nsmap home ::tcl::file::home
+  namespace ensemble configure file -map $nsmap
+}
+
+# ----------------------------------------------------------------------
 
 proc ::gorilla::if-platform? { test body } {
 
